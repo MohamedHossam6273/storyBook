@@ -107,7 +107,7 @@ async function loadStories() {
     div.innerHTML = `
       <h3>${story.title}</h3>
       <p>${story.description || ""}</p>
-      <button onclick="loadStory('${story.id}')">Read</button>
+      <button onclick="loadStory(${story.id})">Read</button>
     `;
     storyList.appendChild(div);
   });
@@ -125,10 +125,16 @@ async function loadStory(storyId) {
 
     if (error) throw error;
 
-    // 2️⃣ Parse JSON content
-    const storyData = story.content
-      ? JSON.parse(story.content) // if stored as JSON in Supabase
-      : { title: story.title, content: story.description };
+    // 2️⃣ Detect JSON vs plain text
+    let storyData = { title: story.title, content: story.content };
+    try {
+      const parsed = JSON.parse(story.content);
+      if (parsed && parsed.content) {
+        storyData = parsed;
+      }
+    } catch (e) {
+      // it's just text, ignore
+    }
 
     // 3️⃣ Load saved progress
     const savedPosition = await loadProgress(storyId);
@@ -147,7 +153,7 @@ async function loadStory(storyId) {
     storyContent.innerHTML = `
       <h2>${storyData.title}</h2>
       <p>${contentToShow}</p>
-      <button onclick="saveProgress('${storyId}', 'chapter1')">Save Progress</button>
+      <button onclick="saveProgress(${storyId}, 'chapter1')">Save Progress</button>
     `;
   } catch (err) {
     console.error("Error loading story:", err);
