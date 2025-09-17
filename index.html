@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storybook MVP</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script defer src="app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    #auth-section, #story-list, #story-content {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+    input {
+      display: block;
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      max-width: 300px;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #0070f3;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005bb5;
+    }
+    .story-card {
+      border-bottom: 1px solid #eee;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Storybook MVP</h1>
+
+  <!-- Authentication Section -->
+  <div id="auth-section">
+    <h2>Login / Signup</h2>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button onclick="signUp()">Sign Up</button>
+    <button onclick="login()">Login</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Stories List -->
+  <div id="story-list">
+    <h2>Stories</h2>
+    <!-- Populated dynamically -->
+  </div>
+
+  <!-- Story Content -->
+  <div id="story-content">
+    <h2>Story Content</h2>
+    <!-- Loaded dynamically -->
+  </div>
+</body>
+</html>
