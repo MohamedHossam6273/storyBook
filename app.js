@@ -1,12 +1,9 @@
 // ========== Supabase Setup ==========
-const { createClient } = supabase;
-
-// ⚠️ Replace with your own values from Supabase → Project Settings → API
 const SUPABASE_URL = "https://achartarfibykqfwcucu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjaGFydGFyZmlieWtxZndjdWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjMxNTAsImV4cCI6MjA3MzY5OTE1MH0.IeNHDsbQ0rVoF0CcsTf1PpxUdwe5Y32A3YW7N3z3A6M";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjaGFydGFyZmlieWtxZndjdWN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjMxNTAsImV4cCI6MjA3MzY5OTE1MH0.IeNHDsbQ0rVoF0CcsTf1PpxUdwe5Y32A3YW7N3z3A6M";
 
-
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ========== Authentication ==========
 async function signUp() {
@@ -109,19 +106,31 @@ async function loadStories() {
     div.classList.add("story-card");
     div.innerHTML = `
       <h3>${story.title}</h3>
-      <p>${story.description}</p>
-      <button onclick="loadStory('${story.json_url}', '${story.id}')">Read</button>
+      <p>${story.description || ""}</p>
+      <button onclick="loadStory('${story.id}')">Read</button>
     `;
     storyList.appendChild(div);
   });
 }
 
-async function loadStory(jsonUrl, storyId) {
+// ========== Load Single Story ==========
+async function loadStory(storyId) {
   try {
-    const response = await fetch(jsonUrl);
-    const storyData = await response.json();
+    // 1️⃣ Get story from Supabase
+    const { data: story, error } = await supabaseClient
+      .from("stories")
+      .select("*")
+      .eq("id", storyId)
+      .single();
 
-    // Load saved progress
+    if (error) throw error;
+
+    // 2️⃣ Parse JSON content
+    const storyData = story.content
+      ? JSON.parse(story.content) // if stored as JSON in Supabase
+      : { title: story.title, content: story.description };
+
+    // 3️⃣ Load saved progress
     const savedPosition = await loadProgress(storyId);
     let contentToShow = storyData.content;
 
@@ -133,6 +142,7 @@ async function loadStory(jsonUrl, storyId) {
         storyData.content;
     }
 
+    // 4️⃣ Show story
     const storyContent = document.getElementById("story-content");
     storyContent.innerHTML = `
       <h2>${storyData.title}</h2>
