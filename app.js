@@ -51,7 +51,7 @@ async function saveProgress(storyId, lastPosition) {
   const { data, error } = await supabaseClient
     .from("user_progress")
     .upsert({
-      user_id: user.id,
+      user_id: user.email, // use email instead of uuid
       story_id: storyId,
       last_position: lastPosition,
       updated_at: new Date(),
@@ -75,7 +75,7 @@ async function loadProgress(storyId) {
   const { data, error } = await supabaseClient
     .from("user_progress")
     .select("last_position")
-    .eq("user_id", user.id)
+    .eq("user_id", user.email) // match email instead of uuid
     .eq("story_id", storyId)
     .single();
 
@@ -116,7 +116,6 @@ async function loadStories() {
 // ========== Load Single Story ==========
 async function loadStory(storyId) {
   try {
-    // 1️⃣ Get story from Supabase
     const { data: story, error } = await supabaseClient
       .from("stories")
       .select("*")
@@ -125,18 +124,14 @@ async function loadStory(storyId) {
 
     if (error) throw error;
 
-    // 2️⃣ Detect JSON vs plain text
     let storyData = { title: story.title, content: story.content };
     try {
       const parsed = JSON.parse(story.content);
       if (parsed && parsed.content) {
         storyData = parsed;
       }
-    } catch (e) {
-      // it's just text, ignore
-    }
+    } catch (e) {}
 
-    // 3️⃣ Load saved progress
     const savedPosition = await loadProgress(storyId);
     let contentToShow = storyData.content;
 
@@ -148,7 +143,6 @@ async function loadStory(storyId) {
         storyData.content;
     }
 
-    // 4️⃣ Show story
     const storyContent = document.getElementById("story-content");
     storyContent.innerHTML = `
       <h2>${storyData.title}</h2>
@@ -163,11 +157,9 @@ async function loadStory(storyId) {
 // ========== Auth State ==========
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (session) {
-    // User is logged in
     document.getElementById("auth-section").style.display = "none";
     loadStories();
   } else {
-    // User is logged out
     document.getElementById("auth-section").style.display = "block";
     document.getElementById("story-list").innerHTML =
       "<h2>Stories</h2><p>Please log in to see stories.</p>";
