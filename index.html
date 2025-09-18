@@ -3,78 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Storybook MVP</title>
-  <!-- Supabase client -->
+  <title>Storybook - Main</title>
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <!-- Your app logic -->
   <script defer src="app.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f9f9f9;
-      color: #333;
-    }
-    h1 {
-      color: #222;
-    }
-    #auth-section,
-    #story-list,
-    #story-content {
-      margin-bottom: 20px;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
-    }
-    input {
-      display: block;
-      margin: 8px 0;
-      padding: 8px;
-      width: 100%;
-      max-width: 300px;
-    }
-    button {
-      margin: 5px 0;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      background: #0070f3;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #005bb5;
-    }
-    .story-card {
-      border-bottom: 1px solid #eee;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-    }
-    #message {
-      margin-bottom: 15px;
-      padding: 10px;
-      border-radius: 5px;
-      display: none;
-    }
-    #message.success {
-      background: #e6ffed;
-      color: #0a662e;
-      border: 1px solid #bdf0c4;
-    }
-    #message.error {
-      background: #ffe6e6;
-      color: #a60000;
-      border: 1px solid #f0bdbd;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h1 { color: #222; }
+    #auth-section, #story-list { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #fff; }
+    input { display: block; margin: 8px 0; padding: 8px; width: 100%; max-width: 300px; }
+    button { margin: 5px 0; padding: 8px 12px; border: none; border-radius: 5px; background: #0070f3; color: white; cursor: pointer; font-size: 14px; }
+    button:hover { background: #005bb5; }
+    .story-card { border-bottom: 1px solid #eee; margin-bottom: 12px; padding-bottom: 10px; }
   </style>
 </head>
 <body>
-  <h1>📚 Storybook MVP</h1>
-
-  <!-- Feedback messages -->
-  <div id="message"></div>
+  <h1>📚 Storybook</h1>
 
   <!-- Authentication Section -->
   <div id="auth-section">
@@ -85,7 +28,7 @@
     <button onclick="login()">Login</button>
   </div>
 
-  <!-- Logout Section (only when logged in) -->
+  <!-- Logout Section -->
   <div id="logout-section" style="display:none;">
     <button onclick="logout()">Logout</button>
   </div>
@@ -94,12 +37,6 @@
   <div id="story-list">
     <h2>Stories</h2>
     <p>Please log in to see stories.</p>
-  </div>
-
-  <!-- Story Content -->
-  <div id="story-content">
-    <h2>Story Content</h2>
-    <p>No story loaded yet.</p>
   </div>
 </body>
 </html>
