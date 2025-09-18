@@ -54,7 +54,7 @@ async function saveProgress(storyId, nodeId) {
   const { data, error } = await supabaseClient
     .from("user_progress")
     .upsert({
-      user_id: user.email, // use email instead of uuid
+      user_id: user.id, // ✅ use Supabase user UUID
       story_id: storyId,
       last_position: nodeId,
       updated_at: new Date(),
@@ -78,16 +78,16 @@ async function loadProgress(storyId) {
   const { data, error } = await supabaseClient
     .from("user_progress")
     .select("last_position")
-    .eq("user_id", user.email)
+    .eq("user_id", user.id) // ✅ fixed
     .eq("story_id", storyId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.log("No saved progress found.");
     return null;
   }
 
-  return data.last_position;
+  return data ? data.last_position : null;
 }
 
 // ========== Load Stories ==========
@@ -138,6 +138,10 @@ async function playStory(storyId) {
     const startNodeId = savedNodeId || story.start;
 
     currentNode = storyJson.nodes.find((n) => n.node_id === startNodeId);
+    if (!currentNode) {
+      console.error("Start node not found:", startNodeId);
+      return;
+    }
     renderNode(currentNode);
   } catch (err) {
     console.error("Error loading story:", err);
@@ -153,7 +157,7 @@ function renderNode(node) {
     ${node.image_url ? `<img src="${node.image_url}" width="400"/>` : ""}
   `;
 
-  if (node.choices) {
+  if (node.choices && node.choices.length > 0) {
     html += "<div>";
     node.choices.forEach((choice) => {
       html += `<button onclick="goToNode('${choice.next_node_id}')">${choice.choice_text_en}</button>`;
