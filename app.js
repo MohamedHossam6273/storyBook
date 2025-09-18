@@ -5,6 +5,9 @@ const SUPABASE_ANON_KEY =
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+let currentStory = null;
+let currentNode = null;
+
 // ========== Authentication ==========
 async function signUp() {
   const email = document.getElementById("email").value;
@@ -41,7 +44,7 @@ async function logout() {
 }
 
 // ========== Progress Handling ==========
-async function saveProgress(storyId, lastPosition) {
+async function saveProgress(storyId, nodeId) {
   const {
     data: { user },
   } = await supabaseClient.auth.getUser();
@@ -53,7 +56,7 @@ async function saveProgress(storyId, lastPosition) {
     .upsert({
       user_id: user.email, // use email instead of uuid
       story_id: storyId,
-      last_position: lastPosition,
+      last_position: nodeId,
       updated_at: new Date(),
     })
     .select();
@@ -75,7 +78,7 @@ async function loadProgress(storyId) {
   const { data, error } = await supabaseClient
     .from("user_progress")
     .select("last_position")
-    .eq("user_id", user.email) // match email instead of uuid
+    .eq("user_id", user.email)
     .eq("story_id", storyId)
     .single();
 
@@ -91,7 +94,7 @@ async function loadProgress(storyId) {
 async function loadStories() {
   let { data: stories, error } = await supabaseClient
     .from("stories")
-    .select("*");
+    .select("id, title, subtitle");
 
   if (error) {
     console.error("Error fetching stories:", error);
@@ -106,15 +109,15 @@ async function loadStories() {
     div.classList.add("story-card");
     div.innerHTML = `
       <h3>${story.title}</h3>
-      <p>${story.description || ""}</p>
-      <button onclick="loadStory(${story.id})">Read</button>
+      <p>${story.subtitle || ""}</p>
+      <button onclick="playStory(${story.id})">Read</button>
     `;
     storyList.appendChild(div);
   });
 }
 
-// ========== Load Single Story ==========
-async function loadStory(storyId) {
+// ========== Play a Story ==========
+async function playStory(storyId) {
   try {
     const { data: story, error } = await supabaseClient
       .from("stories")
@@ -124,34 +127,64 @@ async function loadStory(storyId) {
 
     if (error) throw error;
 
-    let storyData = { title: story.title, content: story.content };
-    try {
-      const parsed = JSON.parse(story.content);
-      if (parsed && parsed.content) {
-        storyData = parsed;
-      }
-    } catch (e) {}
+    currentStory = story;
+    const storyJson =
+      typeof story.content === "string"
+        ? JSON.parse(story.content)
+        : story.content;
 
-    const savedPosition = await loadProgress(storyId);
-    let contentToShow = storyData.content;
+    // load saved node if exists
+    const savedNodeId = await loadProgress(storyId);
+    const startNodeId = savedNodeId || story.start;
 
-    if (savedPosition) {
-      contentToShow =
-        "⏪ Resuming from: " +
-        savedPosition +
-        "<br><br>" +
-        storyData.content;
-    }
-
-    const storyContent = document.getElementById("story-content");
-    storyContent.innerHTML = `
-      <h2>${storyData.title}</h2>
-      <p>${contentToShow}</p>
-      <button onclick="saveProgress(${storyId}, 'chapter1')">Save Progress</button>
-    `;
+    currentNode = storyJson.nodes.find((n) => n.node_id === startNodeId);
+    renderNode(currentNode);
   } catch (err) {
     console.error("Error loading story:", err);
   }
+}
+
+// ========== Render Node ==========
+function renderNode(node) {
+  const container = document.getElementById("story-content");
+
+  let html = `
+    <h2>${node.text_en}</h2>
+    ${node.image_url ? `<img src="${node.image_url}" width="400"/>` : ""}
+  `;
+
+  if (node.choices) {
+    html += "<div>";
+    node.choices.forEach((choice) => {
+      html += `<button onclick="goToNode('${choice.next_node_id}')">${choice.choice_text_en}</button>`;
+    });
+    html += "</div>";
+  } else {
+    html += `<p><em>The End</em></p>`;
+  }
+
+  container.innerHTML = html;
+
+  // Save progress automatically
+  if (currentStory && node.node_id) {
+    saveProgress(currentStory.id, node.node_id);
+  }
+}
+
+// ========== Move to Next Node ==========
+function goToNode(nextNodeId) {
+  const storyJson =
+    typeof currentStory.content === "string"
+      ? JSON.parse(currentStory.content)
+      : currentStory.content;
+
+  const nextNode = storyJson.nodes.find((n) => n.node_id === nextNodeId);
+  if (!nextNode) {
+    console.error("Next node not found:", nextNodeId);
+    return;
+  }
+  currentNode = nextNode;
+  renderNode(nextNode);
 }
 
 // ========== Auth State ==========
